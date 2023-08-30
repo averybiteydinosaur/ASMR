@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    user: postgres
+    secrets:
+      - db-password
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+      build:
+        context: .
+        target: final
+      restart: always
+      ports:
+        - 8080:8080
+      environment:
+        - PG_DBNAME=postgres
+        - PG_HOST=db
+        - PG_USER=postgres
+        - PG_PASSWORD=mysecretpassword
+        - ADDRESS=0.0.0.0:8080
+        - RUST_LOG=debug
+      depends_on:
+        db:
+          condition: service_healthy
+
+volumes:
+  postgres-data:
+
+
+secrets:
+  db-password:
+    file: db/password.txt

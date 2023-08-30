@@ -1,0 +1,144 @@
+:root {
+	--columnAmount: 1;
+}
+
+html {
+	scrollbar-width: none;
+	scroll-snap-type: y mandatory;
+	scroll-padding: 0.5em;
+	font-size: 16px;
+	font-family: Arial;
+}
+
+body {
+	color: #808085;
+	background-color: #101015;
+	margin: 0.25em;
+}
+
+main {
+	text-align: center;
+}
+
+* + h2 {
+	font-size: 1em;
+	margin: 0;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+}
+
+* + h3 {
+	font-size: 0.75em;
+	margin: 0;
+	align-self:end;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 1;
+}
+
+.article_feed {
+	grid-area: feed;
+	justify-self: start;
+}
+
+.article_time {
+	grid-area: time;
+	justify-self: end;
+}
+
+.read {
+	opacity: 0.25;
+}
+
+article {
+	scroll-snap-align: start;
+	background-color: #202025;
+  	aspect-ratio: 1/1;
+	width: calc(100% / var(--columnAmount) - 0.5em);
+	margin: 0.25em;
+}
+
+article[read="1"] {
+	opacity: 0.3;
+}
+
+.article_image {
+	height: 12em;
+	width: 100%;
+	object-fit:cover;
+}
+
+[role=menu] {
+	position: fixed;
+  background-color: #101015;
+	z-index: 1;
+}
+
+[role=menu-item] {
+  padding: 0.5em;
+  display: none;
+}
+
+[role=menu-item]:hover {
+  background-color: #202025;
+  cursor: pointer;
+}
+
+#adaptive-context-menu.article > div {
+	display: block;
+}
+
+#adaptive-context-menu.background > div#undo-read,
+#adaptive-context-menu.background > div#toggle-read {
+	display: block;
+}
+
+#dummy-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+}
+
+#scroll-trigger {
+  position: absolute;
+  height: 50vh;
+  bottom: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none; 
+}
+
+
+@media (min-resolution: 120dpi) {
+	html {
+		scroll-snap-type: none;
+	}
+}
+
+#loading-bar {
+  background: repeating-linear-gradient(to right, green 0%, greenyellow 50%, green 100%);
+  width: 100%;
+  background-size: 200% auto;
+  background-position: 0 100%;
+  animation: gradient 2s infinite;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+  animation-timing-function: linear;
+  height: 0.5em;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: none;
+}
+
+#loading-bar[amount="0"] {
+  display: none;
+}
+
+@keyframes gradient { 
+  0%   { background-position: 0 0; }
+  100% { background-position: -200% 0; }
+}
