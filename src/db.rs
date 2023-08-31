@@ -56,6 +56,17 @@ pub async fn startup() -> Pool {
 
     client
         .batch_execute(
+            "CREATE TABLE IF NOT EXISTS categories (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            UNIQUE (title)
+            )",
+        )
+        .await
+        .unwrap();
+
+    client
+        .batch_execute(
             "CREATE TABLE IF NOT EXISTS feeds (
             id SERIAL PRIMARY KEY,
             title TEXT,
@@ -66,17 +77,10 @@ pub async fn startup() -> Pool {
             last_added_epoch INTEGER,
             update_frequency_seconds INTEGER,
             fallback_image TEXT,
-            latest_uids TEXT
-            )",
-        )
-        .await
-        .unwrap();
-
-    client
-        .batch_execute(
-            "CREATE TABLE IF NOT EXISTS categories (
-            id SERIAL PRIMARY KEY,
-            title TEXT
+            latest_uids TEXT,
+            FOREIGN KEY (category_id) REFERENCES categories (id),
+            UNIQUE (link),
+            UNIQUE (title)
             )",
         )
         .await
@@ -115,6 +119,20 @@ pub async fn startup() -> Pool {
         .unwrap();
 
     pool
+}
+
+pub async fn add_category(pool: &Pool, category: String) {
+    let pool = pool.clone();
+
+    let conn = pool.get().await.unwrap();
+
+    let _resp = conn
+        .execute(
+            "INSERT INTO categories (title) VALUES ($1) ON CONFLICT (title) DO NOTHING",
+            &[&category],
+        )
+        .await
+        .unwrap();
 }
 
 //TODO remove this and pretify

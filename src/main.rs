@@ -38,6 +38,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone())) //Pool is an Arc under the hood, so clone is just an incremented reference to the pool
             .service(api::list_endpoints)
             .service(api::feeds_list)
+            .service(api::category_add)
             .service(api::feeds_add)
             .service(api::feeds_mark_valid)
             .service(api::feeds_mark_invalid)

@@ -1,3 +1,10 @@
+CREATE TABLE IF NOT EXISTS categories
+  (
+     id    SERIAL PRIMARY KEY,
+     title TEXT,
+     UNIQUE (title)
+  );
+
 CREATE TABLE IF NOT EXISTS feeds
   (
      id                       SERIAL PRIMARY KEY,
@@ -9,16 +16,13 @@ CREATE TABLE IF NOT EXISTS feeds
      last_added_epoch         INTEGER,
      update_frequency_seconds INTEGER,
      fallback_image           TEXT,
-     latest_uids              TEXT
+     latest_uids              TEXT,
+     FOREIGN KEY (category_id) REFERENCES categories (id),
+     UNIQUE (link),
+     UNIQUE (title)
   ); 
 
-CREATE TABLE IF NOT EXISTS categories
-  (
-     id    SERIAL PRIMARY KEY,
-     title TEXT
-  );
-
- CREATE TABLE IF NOT EXISTS articles
+CREATE TABLE IF NOT EXISTS articles
   (
      id              SERIAL PRIMARY KEY,
      uid             TEXT,

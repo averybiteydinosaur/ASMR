@@ -12,6 +12,11 @@ pub struct IncomingFeed {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct IncomingCategory {
+    category: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct IncomingFeeds {
     feeds: Vec<IncomingFeed>,
 }
@@ -63,6 +68,18 @@ pub async fn list_endpoints() -> HttpResponse {
             "feeds/articles/mark_unread",
             "feeds/articles/mark_read_undo",
         ])
+}
+
+#[post("api/category")]
+pub async fn category_add(
+    db: web::Data<Pool>,
+    incomingcategory: web::Json<IncomingCategory>,
+) -> HttpResponse {
+    db::add_category(&db, incomingcategory.into_inner().category).await;
+
+    HttpResponse::Ok()
+        .content_type(ContentType::plaintext())
+        .body("Seemed to work")
 }
 
 #[get("api/feeds")]
