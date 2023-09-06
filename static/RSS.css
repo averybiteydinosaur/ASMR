@@ -87,10 +87,21 @@ article[read="1"] {
   cursor: pointer;
 }
 
+#add-feed-menu {
+	display: none;
+	position: absolute;
+	z-index: 1;
+}
+
+#add-feed-menu.visible {
+	display:block;
+}
+
 #adaptive-context-menu.article > div {
 	display: block;
 }
 
+#adaptive-context-menu.background > div#add-feed,
 #adaptive-context-menu.background > div#undo-read,
 #adaptive-context-menu.background > div#toggle-read {
 	display: block;

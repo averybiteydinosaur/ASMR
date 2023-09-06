@@ -7,7 +7,7 @@ use crate::db;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct IncomingFeed {
     pub title: String,
-    pub category_id: String,
+    pub category: String,
     pub link: String,
 }
 
@@ -70,7 +70,16 @@ pub async fn list_endpoints() -> HttpResponse {
         ])
 }
 
-#[post("api/category")]
+#[get("api/categories")]
+pub async fn categories_list(db: web::Data<Pool>) -> HttpResponse {
+    let categories = db::get_categories(&db).await;
+
+    HttpResponse::Ok()
+        .content_type(ContentType::json())
+        .json(categories)
+}
+
+#[post("api/categories")]
 pub async fn category_add(
     db: web::Data<Pool>,
     incomingcategory: web::Json<IncomingCategory>,

@@ -80,7 +80,11 @@ async function loadArticlesNow() {
 
 async function createArticles(status,category,feed_id,id = 0) {
 	let articles = await getArticles(status,category,feed_id,id)
-	createArticleCards(articles)
+	if (id == 0 && articles.length == 0) {
+		showNoArticles()
+	} else {
+		createArticleCards(articles)
+	}
 }
 
 async function getArticles(status,category,feed_id,id) {
@@ -135,6 +139,12 @@ function createArticleCards(articles) {
 	}
 }
 
+function showNoArticles() {
+	let hr = document.createElement('hr')
+	hr.innerHTML = 'No Articles Returned'
+	document.getElementsByTagName('main')[0].appendChild(hr)
+}
+
 function timeSince(t) {
   let seconds = (Date.now()/1000 - t )
   d = new Date(t * 1000)
@@ -184,7 +194,7 @@ async function categoryRead(category_id) {
 }
 
 //////////////////////////
-var adaptiveContextMenu = document.getElementById('adaptive-context-menu')
+let adaptiveContextMenu = document.getElementById('adaptive-context-menu')
 
 function initiateMenuOption (event) {
 	switch(event.target.id) {
@@ -193,6 +203,9 @@ function initiateMenuOption (event) {
 		break
 	case 'category-read':
 		categoryRead(event.target.getAttribute("category_id"))
+		break
+	case 'add-feed':
+		addfeedpopup()
 		break
 	case 'undo-read':
 		undoRead()
@@ -210,6 +223,29 @@ function toggleRead() {
 		localStorage.setItem('rss.values.read','')
 	}
 	loadArticlesNow()
+}
+
+async function addfeedpopup() {
+	addCategoryList()
+	let addFeedMenu = document.getElementById("add-feed-menu")
+	addFeedMenu.classList.toggle('visible')
+}
+
+async function addCategoryList() {
+	let categories = await getCategories()
+	let feedList = document.getElementById("feed categories")
+	feedList.innerHTML = ''
+	categories.forEach(({title}) => {
+		let newOption = document.createElement("option");
+        newOption.value = title;
+        feedList.appendChild(newOption);
+	})
+}
+
+async function getCategories() {
+	response = await fetch('api/categories')
+	result = await response.json()
+	return result
 }
 
 function setColumns() {

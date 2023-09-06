@@ -8,11 +8,21 @@
     <link rel="stylesheet" type="text/css" href="RSS.css">    
 </head>
 <body>
+    <div id="add-feed-menu">
+        <form id="add_category">
+            <input type="text" name="title" placeholder="feed title">
+            <input type="text" name="link" placeholder="feed link">
+            <input type="text" list="feed categories" name="category" placeholder="feed category">
+	    <input type="submit">
+	    <datalist id="feed categories"></>
+        </form>
+    </div>
     <div id="adaptive-context-menu" role="menu">
         <div id="feed-read" role="menu-item">Mark Feed Read</div>
         <div id="category-read" role="menu-item">Mark Category Read</div>
-        <div id="undo-read" role="menu-item">Undo Last Read</div>
+        <div id="add-feed" role="menu-item">Add Feed</div>
         <div id="toggle-read" role="menu-item">Toggle Read/Unread</div>
+        <div id="undo-read" role="menu-item">Undo Last Read</div>
     </div>
     <main>
     </main>

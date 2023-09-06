@@ -34,6 +34,12 @@ pub struct ArticleEntry {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct CategoryEntry {
+    pub id: i32,
+    pub title: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct BackupImage {
     pub link: String,
 }
@@ -121,6 +127,21 @@ pub async fn startup() -> Pool {
     pool
 }
 
+pub async fn get_categories(pool: &Pool) -> Vec<CategoryEntry> {
+    let pool = pool.clone();
+
+    let conn = pool.get().await.unwrap();
+    conn.query("SELECT * from categories", &[])
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|row| CategoryEntry {
+            id: row.get(0),
+            title: row.get(1),
+        })
+        .collect()
+}
+
 pub async fn add_category(pool: &Pool, category: String) {
     let pool = pool.clone();
 
@@ -202,8 +223,8 @@ pub async fn add_feeds(pool: &Pool, feeds: Vec<api::IncomingFeed>) {
     let transact = conn.transaction().await.unwrap();
 
     for feed in feeds {
-        transact.execute("INSERT INTO feeds (title, category_id, link, valid, last_updated_epoch, last_added_epoch, update_frequency_seconds, fallback_image, latest_uids) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-        &[&feed.title, &feed.category_id, &feed.link, &1_i32, &-1_i64, &-1_i64, &300_i64, &"".to_string(), &"[]".to_string()],
+        transact.execute("INSERT INTO feeds (title, category_id, link, valid, last_updated_epoch, last_added_epoch, update_frequency_seconds, fallback_image, latest_uids) SELECT $1, id, $3, $4, $5, $6, $7, $8, $9 FROM categories WHERE title = $2",
+        &[&feed.title, &feed.category, &feed.link, &true, &-1_i32, &-1_i32, &300_i32, &"".to_string(), &"[]".to_string()],
         ).await.unwrap();
     }
 
