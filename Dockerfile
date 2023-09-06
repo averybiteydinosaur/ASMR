@@ -1,14 +1,16 @@
 ARG RUST_VERSION=1.71.1
 FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 
-RUN --mount=type=bind,source=src,target=src \
-    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-    --mount=type=cache,target=/app/target/ \
-    set -e && \
-    cargo build --locked --release && \
-    pwd && \
-    cp ./target/release/rss /bin/rss 
+RUN cargo new rss
+WORKDIR rss
+COPY Cargo.toml Cargo.lock .
+RUN cargo build --locked --release
+
+COPY src src
+
+RUN set -e && \
+    touch src/main.rs && \
+    cargo build --locked --release 
 
 FROM debian:bookworm-slim AS final
 
@@ -22,7 +24,7 @@ RUN adduser \
     appuser
 USER appuser
    
-COPY --from=builder /bin/rss /bin/rss
+COPY --from=builder /rss/target/release/rss /bin/rss
 COPY static/ /static
 
 EXPOSE 8080
