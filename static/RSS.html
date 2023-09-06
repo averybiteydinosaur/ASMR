@@ -9,12 +9,14 @@
 </head>
 <body>
     <div id="add-feed-menu">
-        <form id="add_category">
-            <input type="text" name="title" placeholder="feed title">
-            <input type="text" name="link" placeholder="feed link">
-            <input type="text" list="feed categories" name="category" placeholder="feed category">
-	    <input type="submit">
-	    <datalist id="feed categories"></>
+        <form action="" id="add_feed">
+            <input type="text" name="title" placeholder="feed title" required>
+            <input type="text" name="link" placeholder="feed link" required>
+            <input type="text" list="feed-categories" name="category" placeholder="feed category" required>
+            <input type="text" name="image" placeholder="fallback image">
+            <input type="number" name="frequency" placeholder="update frequency (s)" value="300" min="60" required>
+	    <button type="submit">Submit</button>
+	    <datalist id="feed-categories"></>
         </form>
     </div>
     <div id="adaptive-context-menu" role="menu">

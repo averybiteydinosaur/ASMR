@@ -205,7 +205,7 @@ function initiateMenuOption (event) {
 		categoryRead(event.target.getAttribute("category_id"))
 		break
 	case 'add-feed':
-		addfeedpopup()
+		addFeedPopup()
 		break
 	case 'undo-read':
 		undoRead()
@@ -225,15 +225,46 @@ function toggleRead() {
 	loadArticlesNow()
 }
 
-async function addfeedpopup() {
+let loginForm = document.getElementById("add_feed")
+
+loginForm.addEventListener("submit", addFeed)
+
+async function addFeed(event) {
+  event.preventDefault();
+  //curl -k -H 'Content-Type: application/json' -X POST http://192.168.0.197:8080/api/feeds -d '{"feeds": [{"title":"Weapons of Mass Destruction","category":"Books","link":"https://www.royalroad.com/fiction/syndication/64916","fallback_image":"","update_frequency":300}]}'
+
+  await fetch("api/feeds", {
+  	method: 'POST',
+  	headers: {"Content-Type": "application/json"},
+  	body: JSON.stringify({
+    'feeds': [
+      {
+        'title': loginForm.title.value,        
+        'link': loginForm.link.value,
+        'category': loginForm.category.value,
+        'fallback_image': loginForm.image.value,
+        'update_frequency': loginForm.frequency.valueAsNumber
+      }
+    ]
+  })
+  })
+  await get_feeds()
+};
+
+async function addFeedPopup() {
 	addCategoryList()
 	let addFeedMenu = document.getElementById("add-feed-menu")
-	addFeedMenu.classList.toggle('visible')
+	addFeedMenu.classList.add('visible')
+}
+
+async function removeFeedPopup() {
+	let addFeedMenu = document.getElementById("add-feed-menu")
+	addFeedMenu.classList.remove('visible')
 }
 
 async function addCategoryList() {
 	let categories = await getCategories()
-	let feedList = document.getElementById("feed categories")
+	let feedList = document.getElementById("feed-categories")
 	feedList.innerHTML = ''
 	categories.forEach(({title}) => {
 		let newOption = document.createElement("option");
@@ -258,7 +289,8 @@ async function undoRead(event) {
 }
 
 function customMenu(e) {
-		e.preventDefault()		
+	removeFeedPopup()
+	e.preventDefault()		
     if (adaptiveContextMenu.classList.length == 0) {
 	    if (e.target.closest('article') == null) {
     		adaptiveContextMenu.classList.add('background');
@@ -346,6 +378,8 @@ setColumns()
 history.pushState(null, "");
 
 window.addEventListener("popstate", () => {
+	removeFeedPopup()
+	adaptiveContextMenu.className = ''
 	if (localStorage.getItem('rss.values.feed') != '') {
 		localStorage.setItem('rss.values.feed','')
 	} else if (localStorage.getItem('rss.values.category') != '') {

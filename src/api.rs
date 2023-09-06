@@ -9,6 +9,8 @@ pub struct IncomingFeed {
     pub title: String,
     pub category: String,
     pub link: String,
+    pub fallback_image: String,
+    pub update_frequency: i32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

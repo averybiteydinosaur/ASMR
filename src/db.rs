@@ -224,7 +224,7 @@ pub async fn add_feeds(pool: &Pool, feeds: Vec<api::IncomingFeed>) {
 
     for feed in feeds {
         transact.execute("INSERT INTO feeds (title, category_id, link, valid, last_updated_epoch, last_added_epoch, update_frequency_seconds, fallback_image, latest_uids) SELECT $1, id, $3, $4, $5, $6, $7, $8, $9 FROM categories WHERE title = $2",
-        &[&feed.title, &feed.category, &feed.link, &true, &-1_i32, &-1_i32, &300_i32, &"".to_string(), &"[]".to_string()],
+        &[&feed.title, &feed.category, &feed.link, &true, &-1_i32, &-1_i32, &feed.update_frequency, &feed.fallback_image, &"[]".to_string()],
         ).await.unwrap();
     }
 
