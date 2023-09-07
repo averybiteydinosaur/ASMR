@@ -33,7 +33,7 @@ pub struct UpdateReadDetails {
     pub read: Option<bool>,
     pub id: Option<i32>,
     pub feed_id: Option<i32>,
-    pub category_id: Option<i32>,
+    pub category: Option<String>,
     pub last_id: Option<i32>,
 }
 
@@ -45,7 +45,7 @@ pub struct Category {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Filter {
     pub before: Option<i32>,
-    pub category_id: Option<i32>,
+    pub category: Option<String>,
     pub feed: Option<i32>,
     pub read: Option<bool>,
 }

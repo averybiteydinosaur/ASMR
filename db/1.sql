@@ -1,15 +1,8 @@
-CREATE TABLE IF NOT EXISTS categories
-  (
-     id    SERIAL PRIMARY KEY,
-     title TEXT,
-     UNIQUE (title)
-  );
-
 CREATE TABLE IF NOT EXISTS feeds
   (
      id                       SERIAL PRIMARY KEY,
      title                    TEXT,
-     category_id              INTEGER,
+     category_id              TEXT,
      link                     TEXT,
      valid                    BOOL,
      last_updated_epoch       INTEGER,
@@ -17,7 +10,6 @@ CREATE TABLE IF NOT EXISTS feeds
      update_frequency_seconds INTEGER,
      fallback_image           TEXT,
      latest_uids              TEXT,
-     FOREIGN KEY (category_id) REFERENCES categories (id),
      UNIQUE (link),
      UNIQUE (title)
   ); 
