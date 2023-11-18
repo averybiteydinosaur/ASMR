@@ -41,7 +41,11 @@ async fn get_image(
     match item_media.len() {
         0 => db::backup_image(pool, feed_id).await,
         1 => match item_media[0].thumbnails.len() {
-            0 => item_media[0].content[0].url.as_ref().unwrap().as_str(),
+            0 => item_media[0].content[0]
+                .url
+                .as_ref()
+                .expect("Failed to parse image from feed")
+                .as_str(),
             _ => item_media[0].thumbnails[0].image.uri.as_str(),
         }
         .to_string(),
@@ -51,17 +55,14 @@ async fn get_image(
 
 fn feed_should_run(feed_db_entry: &db::FeedEntry) -> bool {
     feed_db_entry.valid
-        && (time::SystemTime::now()
-            .duration_since(time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i32
+        && (seconds_since_epoch()
             > feed_db_entry.last_updated_epoch + feed_db_entry.update_frequency_seconds)
 }
 
 pub fn seconds_since_epoch() -> i32 {
-    time::SystemTime::now()
-        .duration_since(time::UNIX_EPOCH)
-        .unwrap()
+    time::UNIX_EPOCH
+        .elapsed()
+        .expect("failed to calucalte seconds since epoch")
         .as_secs() as i32
 }
 
@@ -89,8 +90,8 @@ async fn add_new_entries(
     feed: feed_rs::model::Feed,
     mut feed_db_entry: db::FeedEntry,
 ) {
-    println!("{}", feed.title.unwrap().content); //TODO REMOVE ME
-    let previous_uids: Vec<String> = serde_json::from_str(&feed_db_entry.latest_uids).unwrap(); //Array was stored as DB string
+    let previous_uids: Vec<String> = serde_json::from_str(&feed_db_entry.latest_uids)
+        .expect("failed to parse previous UIDs as JSON"); //Array was stored as DB string
 
     let mut current_uids = vec![];
 
@@ -157,7 +158,7 @@ pub async fn update_feed(
 }
 
 pub fn reader(pool: Pool) {
-    let rt = Runtime2::new().unwrap();
+    let rt = Runtime2::new().expect("failed to create initial runtime");
 
     loop {
         let _now = time::Instant::now(); //TODO REMOVE ME

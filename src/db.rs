@@ -51,8 +51,10 @@ fn get_db_config() -> Config {
 pub async fn startup() -> Pool {
     let config = get_db_config();
 
-    let pool = config.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
-    let client = pool.get().await.unwrap();
+    let pool = config
+        .create_pool(Some(Runtime::Tokio1), NoTls)
+        .expect("failed to create pool");
+    let client = pool.get().await.expect("failed to get pool");
 
     client
         .batch_execute(
@@ -72,7 +74,7 @@ pub async fn startup() -> Pool {
             )",
         )
         .await
-        .unwrap();
+        .expect("failed to create feeds table");
 
     client
         .batch_execute(
@@ -91,12 +93,12 @@ pub async fn startup() -> Pool {
             )",
         )
         .await
-        .unwrap();
+        .expect("failed to create article table");
 
     client
         .batch_execute("CREATE INDEX IF NOT EXISTS article_read_index ON articles(read_epoch)")
         .await
-        .unwrap();
+        .expect("failed to create index on articles");
 
     client
         .execute(
@@ -104,7 +106,7 @@ pub async fn startup() -> Pool {
             &[&parser::seconds_since_epoch()],
         )
         .await
-        .unwrap();
+        .expect("failed to set initial timing for update frequency");
 
     pool
 }
@@ -112,21 +114,19 @@ pub async fn startup() -> Pool {
 pub async fn get_categories(pool: &Pool) -> Vec<String> {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool.get().await.expect("failed to get pool");
     conn.query("SELECT DISTINCT(category) from feeds", &[])
         .await
-        .unwrap()
+        .expect("get_categories query failed")
         .into_iter()
-        .map(|row| 
-            row.get(0),
-        )
+        .map(|row| row.get(0))
         .collect()
 }
 
 pub async fn add_category(pool: &Pool, category: String) {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool.get().await.expect("failed to get pool");
 
     let _resp = conn
         .execute(
@@ -134,7 +134,7 @@ pub async fn add_category(pool: &Pool, category: String) {
             &[&category],
         )
         .await
-        .unwrap();
+        .expect("SQL: failed to add categories");
 }
 
 //TODO remove this and pretify
@@ -147,7 +147,7 @@ pub async fn update_feeds(
 ) {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool.get().await.expect("failed to get pool");
 
     let latest_uids = serde_json::to_string(&uid).unwrap();
 
@@ -162,10 +162,10 @@ pub async fn update_feeds(
 pub async fn get_feeds(pool: &Pool) -> Vec<FeedEntry> {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool.get().await.expect("failed to get pool");
     conn.query("SELECT * from feeds", &[])
         .await
-        .unwrap()
+        .expect("query failed to get feeds")
         .into_iter()
         .map(|row| FeedEntry {
             id: row.get(0),
@@ -185,28 +185,34 @@ pub async fn get_feeds(pool: &Pool) -> Vec<FeedEntry> {
 pub async fn backup_image(pool: &Pool, feed_id: i32) -> String {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool.get().await.expect("failed to get pool");
     conn.query(
         "SELECT fallback_image FROM feeds WHERE id = $1",
         &[&feed_id],
     )
     .await
-    .unwrap()
+    .expect("query failed to get fallback image")
     .get(0)
-    .unwrap()
+    .expect("query succeeded but no results")
     .get(0)
 }
 
 pub async fn add_feeds(pool: &Pool, feeds: Vec<api::IncomingFeed>) {
     let pool = pool.clone();
 
-    let mut conn = pool.get().await.unwrap();
-    let transact = conn.transaction().await.unwrap();
+    let mut conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
+    let transact = conn
+        .transaction()
+        .await
+        .expect("failed to start transaction for adding feeds");
 
     for feed in feeds {
         transact.execute("INSERT INTO feeds (title, category, link, valid, last_updated_epoch, last_added_epoch, update_frequency_seconds, fallback_image, latest_uids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         &[&feed.title, &feed.category, &feed.link, &true, &-1_i32, &-1_i32, &feed.update_frequency, &feed.fallback_image, &"[]".to_string()],
-        ).await.unwrap();
+        ).await.expect("query failed to insert feed");
     }
 
     let _ = transact.commit().await;
@@ -215,24 +221,34 @@ pub async fn add_feeds(pool: &Pool, feeds: Vec<api::IncomingFeed>) {
 pub async fn add_article(pool: &Pool, article: parser::NewArticle) {
     let pool = pool.clone();
 
-    let conn = pool.get().await.unwrap();
+    let conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
 
     let _resp = conn.execute("INSERT INTO articles (id, uid, title, link, image, added_epoch, published_epoch, read_epoch, feed_id) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (uid, link) DO NOTHING",
         &[&article.uid, &article.title, &article.link, &article.image, &article.added_epoch, &article.published_epoch, &0_i32, &article.feed_id],
-        ).await.unwrap();
+        ).await.expect("query failed to insert article");
 }
 
 pub async fn mark_feeds_valid(pool: &Pool, ids: Vec<i32>) {
     let pool = pool.clone();
 
-    let mut conn = pool.get().await.unwrap();
-    let transact = conn.transaction().await.unwrap();
+    let mut conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
+    let transact = conn
+        .transaction()
+        .await
+        .expect("failed to start transaction for marking feeds valid");
 
     for id in ids {
+        //TODO Convert the vector and do this as an IN query ditto for invalid
         transact
             .execute("UPDATE feeds SET valid=1 WHERE id = (?)", &[&id])
             .await
-            .unwrap();
+            .expect("query failed to mark feeds valid");
     }
 
     let _ = transact.commit().await;
@@ -241,14 +257,20 @@ pub async fn mark_feeds_valid(pool: &Pool, ids: Vec<i32>) {
 pub async fn mark_feeds_invalid(pool: &Pool, ids: Vec<i32>) {
     let pool = pool.clone();
 
-    let mut conn = pool.get().await.unwrap();
-    let transact = conn.transaction().await.unwrap();
+    let mut conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
+    let transact = conn
+        .transaction()
+        .await
+        .expect("failed to start transaction for marking feeds valid");
 
     for id in ids {
         transact
             .execute("UPDATE feeds SET valid=0 WHERE id = (?)", &[&id])
             .await
-            .unwrap();
+            .expect("query failed to mark feeds invalid");
     }
 
     let _ = transact.commit().await;
@@ -256,7 +278,10 @@ pub async fn mark_feeds_invalid(pool: &Pool, ids: Vec<i32>) {
 
 pub async fn update_articles_read(pool: &Pool, update_details: api::UpdateReadDetails) {
     let pool = pool.clone();
-    let conn = pool.get().await.unwrap();
+    let conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
 
     match update_details.read {
         Some(x) => match x {
@@ -267,17 +292,23 @@ pub async fn update_articles_read(pool: &Pool, update_details: api::UpdateReadDe
                         let query =
                             "UPDATE articles SET read_epoch= $1 WHERE id = $2 AND read_epoch=0"
                                 .to_string();
-                        conn.execute(&query, &[&epoch, &id]).await.unwrap();
+                        conn.execute(&query, &[&epoch, &id])
+                            .await
+                            .expect("query failed to mark feeds read");
                     }
                     None => match update_details.feed_id {
                         Some(feed_id) => {
                             let query = "UPDATE articles SET read_epoch= $1 WHERE feed_id = $2 AND read_epoch=0".to_string();
-                            conn.execute(&query, &[&epoch, &feed_id]).await.unwrap();
+                            conn.execute(&query, &[&epoch, &feed_id])
+                                .await
+                                .expect("query failed to mark feeds read");
                         }
                         None => match update_details.category {
                             Some(category) => {
                                 let query = "UPDATE articles SET read_epoch= $1 WHERE feed_id IN (SELECT id FROM feeds WHERE category = $2) AND read_epoch=0".to_string();
-                                conn.execute(&query, &[&epoch, &category]).await.unwrap();
+                                conn.execute(&query, &[&epoch, &category])
+                                    .await
+                                    .expect("query failed to mark feeds read");
                             }
                             None => println!("oops"),
                         },
@@ -289,18 +320,24 @@ pub async fn update_articles_read(pool: &Pool, update_details: api::UpdateReadDe
                 match update_details.id {
                     Some(id) => {
                         let query = "UPDATE articles SET read_epoch= $1 WHERE id = $2".to_string();
-                        conn.execute(&query, &[&epoch, &id]).await.unwrap();
+                        conn.execute(&query, &[&epoch, &id])
+                            .await
+                            .expect("query failed to mark feeds read");
                     }
                     None => match update_details.feed_id {
                         Some(feed_id) => {
                             let query =
                                 "UPDATE articles SET read_epoch= $1 WHERE feed_id = $2".to_string();
-                            conn.execute(&query, &[&epoch, &feed_id]).await.unwrap();
+                            conn.execute(&query, &[&epoch, &feed_id])
+                                .await
+                                .expect("query failed to mark feeds read");
                         }
                         None => match update_details.category {
                             Some(category) => {
                                 let query = "UPDATE articles SET read_epoch= $1 WHERE feed_id IN (SELECT id FROM feeds WHERE category = $2)".to_string();
-                                conn.execute(&query, &[&epoch, &category]).await.unwrap();
+                                conn.execute(&query, &[&epoch, &category])
+                                    .await
+                                    .expect("query failed to mark feeds read");
                             }
                             None => println!("oops"),
                         },
@@ -310,14 +347,19 @@ pub async fn update_articles_read(pool: &Pool, update_details: api::UpdateReadDe
         },
         None => {
             let query = "UPDATE articles SET read_epoch=0 WHERE read_epoch = (SELECT MAX(read_epoch) from articles)".to_string();
-            conn.execute(&query, &[]).await.unwrap();
+            conn.execute(&query, &[])
+                .await
+                .expect("query failed to mark feeds read");
         }
     };
 }
 
 pub async fn get_articles(pool: &Pool, filter: api::Filter) -> Vec<ArticleEntry> {
     let pool = pool.clone();
-    let conn = pool.get().await.unwrap();
+    let conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
 
     let query = match filter.read {
         Some(x) => if x {
@@ -330,7 +372,7 @@ pub async fn get_articles(pool: &Pool, filter: api::Filter) -> Vec<ArticleEntry>
 
     conn.query(query, &[&filter.category, &filter.feed, &filter.before])
         .await
-        .unwrap()
+        .expect("query failed to get articles")
         .into_iter()
         .map(|row| ArticleEntry {
             id: row.get(0),
@@ -348,14 +390,16 @@ pub async fn get_articles(pool: &Pool, filter: api::Filter) -> Vec<ArticleEntry>
 }
 
 pub async fn get_articles_by_search_term(pool: &Pool, search_term: String) -> Vec<ArticleEntry> {
-    let pool = pool.clone();
-    let conn = pool.get().await.unwrap();
+    let conn = pool
+        .get()
+        .await
+        .expect("failed to get connection from pool");
 
     let query = "SELECT articles.*, feeds.category FROM articles INNER JOIN feeds ON articles.feed_id=feeds.id WHERE title LIKE (?) ORDER by last_added_epoch desc LIMIT 200";
 
     conn.query(query, &[&search_term])
         .await
-        .unwrap()
+        .expect("query failed to get articles by search term")
         .into_iter()
         .map(|row| ArticleEntry {
             id: row.get(0),
