@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::api;
 use crate::parser;
+use std::error;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FeedEntry {
@@ -197,25 +198,38 @@ pub async fn backup_image(pool: &Pool, feed_id: i32) -> String {
     .get(0)
 }
 
-pub async fn add_feeds(pool: &Pool, feeds: Vec<api::IncomingFeed>) {
-    let pool = pool.clone();
+pub async fn add_feed(pool: &Pool, feed: api::IncomingFeed) -> Result<u64, Box<dyn error::Error>> {
 
-    let mut conn = pool
+    Ok(pool
+        .clone()
         .get()
-        .await
-        .expect("failed to get connection from pool");
-    let transact = conn
-        .transaction()
-        .await
-        .expect("failed to start transaction for adding feeds");
-
-    for feed in feeds {
-        transact.execute("INSERT INTO feeds (title, category, link, valid, last_updated_epoch, last_added_epoch, update_frequency_seconds, fallback_image, latest_uids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-        &[&feed.title, &feed.category, &feed.link, &true, &-1_i32, &-1_i32, &feed.update_frequency, &feed.fallback_image, &"[]".to_string()],
-        ).await.expect("query failed to insert feed");
-    }
-
-    let _ = transact.commit().await;
+        .await?
+        .execute(
+            "INSERT INTO feeds 
+                         (title, 
+                         category, 
+                         link, 
+                         valid, 
+                         last_updated_epoch, 
+                         last_added_epoch, 
+                         update_frequency_seconds, 
+                         fallback_image, 
+                         latest_uids) 
+            VALUES       ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT DO NOTHING",
+            &[
+                &feed.title,
+                &feed.category,
+                &feed.link,
+                &true,
+                &-1_i32,
+                &-1_i32,
+                &feed.update_frequency,
+                &feed.fallback_image,
+                &"[]".to_string(),
+            ],
+        )
+        .await?)
 }
 
 pub async fn add_article(pool: &Pool, article: parser::NewArticle) {

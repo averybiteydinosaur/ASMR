@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::feeds_list)
             .service(api::categories_list)
             .service(api::category_add)
-            .service(api::feeds_add)
+            .service(api::feed_add)
             .service(api::feeds_mark_valid)
             .service(api::feeds_mark_invalid)
             .service(api::list_articles)

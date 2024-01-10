@@ -1,30 +1,60 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>RSS Reader</title>
     <link rel="icon" type="image/ico" href="rss.svg" />
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="RSS.css">    
+    <link rel="stylesheet" type="text/css" href="RSS.css">
 </head>
+
 <body>
     <div id="add-feed-menu">
-        <form action="" id="add_feed">
-            <input type="text" name="title" placeholder="feed title" required>
-            <input type="text" name="link" placeholder="feed link" required>
-            <input type="text" list="feed-categories" name="category" placeholder="feed category" required>
-            <input type="text" name="image" placeholder="fallback image">
-            <input type="number" name="frequency" placeholder="update frequency (s)" value="300" min="60" required>
-	    <button type="submit">Submit</button>
-	    <datalist id="feed-categories"></>
+        <form id="add_feed" autocomplete="off">
+            <label for="feedTitle">Feed Title</label><br>
+            <input id="feedTitle" type="text" name="title" placeholder="Required" required><br>
+            <label for="feedLink">Link</label><br>
+            <input id="feedLink" type="text" name="link" placeholder="Required" required><br>
+            <label for="feedCategory">Category</label><br>
+            <input id="feedCategory" type="text" list="feed-categories" name="category" placeholder="Required"
+                required><br>
+            <label for="feedImage">Fallback Image</label><br>
+            <input id="feedImage" type="text" name="image"><br>
+            <label for="feedFrequency">Update Frequency (s)</label><br>
+            <input id="feedFrequency" type="number" name="frequency" placeholder="Required" value="300" min="60"
+                required><br>
+            <button id="formSubmit" type="submit">Submit</button>
+            <svg id="loadingSpinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+            </svg>
+            <datalist id="feed-categories" />
         </form>
     </div>
     <div id="adaptive-context-menu" role="menu">
-        <div id="feed-read" role="menu-item">Mark Feed Read</div>
-        <div id="category-read" role="menu-item">Mark Category Read</div>
-        <div id="add-feed" role="menu-item">Add Feed</div>
-        <div id="toggle-read" role="menu-item">Toggle Read/Unread</div>
-        <div id="undo-read" role="menu-item">Undo Last Read</div>
+        <div id="feed-read" role="menu-item"><img class="img-check-circle">
+            <p>Mark Feed Read</p>
+        </div>
+        <div id="category-read" role="menu-item"><img class="img-check-square">
+            <p>Mark Category Read</p>
+        </div>
+        <div id="add-feed" role="menu-item"><img class="img-edit">
+            <p>Add Feed</p>
+        </div>
+        <div id="toggle-read" role="menu-item"><img class="img-repeat">
+            <p>Toggle Read/Unread</p>
+        </div>
+        <div id="undo-read" role="menu-item"><img class="img-rotate-ccw">
+            <p>Undo Last Read</p>
+        </div>
     </div>
     <main>
     </main>
@@ -34,4 +64,5 @@
     <div id="loading-bar" amount=0></div>
     <script type="text/javascript" src="RSS.js"></script>
 </body>
+
 </html>

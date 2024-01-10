@@ -1,5 +1,9 @@
 :root {
 	--columnAmount: 1;
+	--white: #cccccc;
+	--grey: #808085;
+	--dark-grey: #202025;
+	--black: #101015;
 }
 
 html {
@@ -11,16 +15,16 @@ html {
 }
 
 body {
-	color: #808085;
-	background-color: #101015;
-	margin: 0.25em;
+	color: var(--grey);
+	background-color: var(--black);
+	margin: 0;
 }
 
 main {
 	text-align: center;
 }
 
-* + h2 {
+*+h2 {
 	font-size: 1em;
 	margin: 0;
 	overflow: hidden;
@@ -29,10 +33,10 @@ main {
 	-webkit-line-clamp: 3;
 }
 
-* + h3 {
+*+h3 {
 	font-size: 0.75em;
 	margin: 0;
-	align-self:end;
+	align-self: end;
 	overflow: hidden;
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
@@ -55,8 +59,8 @@ main {
 
 article {
 	scroll-snap-align: start;
-	background-color: #202025;
-  	aspect-ratio: 1/1;
+	background-color: var(--dark-grey);
+	aspect-ratio: 1/1;
 	width: calc(100% / var(--columnAmount) - 0.5em);
 	margin: 0.25em;
 }
@@ -68,58 +72,117 @@ article[read="1"] {
 .article_image {
 	height: 12em;
 	width: 100%;
-	object-fit:cover;
+	object-fit: cover;
 }
 
 [role=menu] {
 	position: fixed;
-  background-color: #101015;
+	background-color: var(--black);
 	z-index: 1;
 }
 
 [role=menu-item] {
-  padding: 0.5em;
-  display: none;
+	padding: 0.3em;
+	display: none;
+}
+
+[role=menu-item]>img {
+	background-color: var(--grey);
+	mask-repeat: no-repeat;
+	mask-position: center;
+	width: 2em;
+}
+
+.img-check-circle {
+	mask-image: url(check-circle.svg);
+}
+
+.img-check-square {
+	mask-image: url(check-square.svg);
+}
+
+.img-edit {
+	mask-image: url(edit.svg);
+}
+
+.img-repeat {
+	mask-image: url(repeat.svg);
+}
+
+.img-rotate-ccw {
+	mask-image: url(rotate-ccw.svg);
+}
+
+[role=menu-item] p {
+	padding: 0.3em;
+	margin: 0;
+}
+
+button:hover {
+	color: var(--white);
 }
 
 [role=menu-item]:hover {
-  background-color: #202025;
-  cursor: pointer;
+	background-color: var(--dark-grey);
+	cursor: pointer;
+}
+
+[role=menu-item]:hover>p {
+	color: var(--white);
+}
+
+[role=menu-item]:hover>img {
+	background-color: var(--white);
 }
 
 #add-feed-menu {
 	display: none;
-	position: absolute;
+	position: fixed;
 	z-index: 1;
+	background: rgb(0, 0, 0, 0.8);
+	width: 100vw;
+	height: 100vh;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5em;
+}
+
+#add_feed {
+	background-color: var(--black);
+	padding: 2em;
+}
+
+input {
+	width: 100%;
 }
 
 #add-feed-menu.visible {
-	display:block;
+	display: flex;
 }
 
-#adaptive-context-menu.article > div {
-	display: block;
+#adaptive-context-menu.article>div {
+	display: flex;
 }
 
-#adaptive-context-menu.background > div#add-feed,
-#adaptive-context-menu.background > div#undo-read,
-#adaptive-context-menu.background > div#toggle-read {
-	display: block;
+#adaptive-context-menu.background>div#add-feed,
+#adaptive-context-menu.background>div#undo-read,
+#adaptive-context-menu.background>div#toggle-read {
+	display: flex;
 }
 
 #dummy-container {
-  position: relative;
-  width: 100%;
-  height: 0;
+	position: relative;
+	width: 100%;
+	height: 0;
 }
 
 #scroll-trigger {
-  position: absolute;
-  height: 50vh;
-  bottom: 0;
-  width: 100%;
-  opacity: 0;
-  pointer-events: none; 
+	position: absolute;
+	height: 50vh;
+	bottom: 0;
+	width: 100%;
+	opacity: 0;
+	pointer-events: none;
 }
 
 
@@ -130,26 +193,50 @@ article[read="1"] {
 }
 
 #loading-bar {
-  background: repeating-linear-gradient(to right, green 0%, greenyellow 50%, green 100%);
-  width: 100%;
-  background-size: 200% auto;
-  background-position: 0 100%;
-  animation: gradient 2s infinite;
-  animation-fill-mode: forwards;
-  animation-timing-function: linear;
-  animation-timing-function: linear;
-  height: 0.5em;
-  position: fixed;
-  left: 0;
-  top: 0;
-  display: none;
+	background: repeating-linear-gradient(to right, green 0%, greenyellow 50%, green 100%);
+	width: 100%;
+	background-size: 200% auto;
+	background-position: 0 100%;
+	animation: gradient 2s infinite;
+	animation-fill-mode: forwards;
+	animation-timing-function: linear;
+	animation-timing-function: linear;
+	height: 0.5em;
+	position: fixed;
+	left: 0;
+	top: 0;
+	display: none;
 }
 
 #loading-bar[amount="0"] {
-  display: none;
+	display: none;
 }
 
-@keyframes gradient { 
-  0%   { background-position: 0 0; }
-  100% { background-position: -200% 0; }
+@keyframes gradient {
+	0% {
+		background-position: 0 0;
+	}
+
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+#loadingSpinner {
+	display: none;
+	animation: spin 1s infinite;
+}
+
+#loadingSpinner.visible {
+	display: inline;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
 }

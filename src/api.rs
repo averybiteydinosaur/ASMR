@@ -19,11 +19,6 @@ pub struct IncomingCategory {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct IncomingFeeds {
-    feeds: Vec<IncomingFeed>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 pub struct Ids {
     ids: Vec<i32>,
 }
@@ -104,15 +99,26 @@ pub async fn feeds_list(db: web::Data<Pool>) -> HttpResponse {
 
 //TODO fix this curl -k -H 'Content-Type: application/json' -X POST https://blackbox/api/feeds -d '{"feeds": [{"title":"Book title","category":"Books","link":"https://examplelinkhere"}]}'
 #[post("api/feeds")]
-pub async fn feeds_add(
-    db: web::Data<Pool>,
-    incomingfeeds: web::Json<IncomingFeeds>,
-) -> HttpResponse {
-    db::add_feeds(&db, incomingfeeds.into_inner().feeds).await;
-
-    HttpResponse::Ok()
-        .content_type(ContentType::plaintext())
-        .body("Seemed to work")
+pub async fn feed_add(db: web::Data<Pool>, incomingfeed: web::Json<IncomingFeed>) -> HttpResponse {
+    match db::add_feed(&db, incomingfeed.into_inner()).await {
+        Ok(1) => {
+            HttpResponse::Created()
+            .content_type(ContentType::plaintext())
+            .body("Feed added")
+        },
+        Ok(0) => {
+            HttpResponse::Conflict()
+            .content_type(ContentType::plaintext())
+            .body("Feed not added due to duplicate entry")
+        },
+        Err(e) => {
+            println!("{}",e);
+            HttpResponse::InternalServerError()
+                .content_type(ContentType::plaintext())
+                .body("Critical Server Failure - check logs")
+        },
+        _ => panic!("This should not be possible")
+    }
 }
 
 #[put("api/feeds/mark_valid")] //TODO combine to #[put("feeds")] for general updates
