@@ -1,81 +1,44 @@
-///////////////////////////////////////
+const mainElement = document.getElementsByTagName('main')[0]
+const addFeedMenu = document.getElementById("add_feed")
+const blocker = document.getElementById("blocker")
 
-function testing(e, observer) {
+function hideCustomMenu() {
+	adaptiveContextMenu.className = ''
+}
+
+function load_aditional_articles(e, observer) {
 	if (e[0].isIntersecting) {
-		createArticles(localStorage.getItem('rss.values.read'), localStorage.getItem('rss.values.category'), localStorage.getItem('rss.values.feed'), document.getElementsByTagName('main')[0].lastId);
+		createArticles(localStorage.getItem('rss.values.read'),
+			localStorage.getItem('rss.values.category'),
+			localStorage.getItem('rss.values.feed'), mainElement.lastId)
 	}
 }
 
-let observer = new IntersectionObserver(testing);
+let additional_article_trigger = new IntersectionObserver(load_aditional_articles)
 
-let target = document.querySelector("#scroll-trigger");
-
-/////////////////////////////////////////////////////////////
+let articles_end = document.querySelector("#scroll-trigger")
 
 let feeds_array
 localStorage.setItem('rss.values.read', 'unread')
 localStorage.setItem('rss.values.category', '')
 localStorage.setItem('rss.values.feed', '')
-var loading_bar = document.getElementById('loading-bar')
 
-class RssArticle extends HTMLElement {
-	constructor() {
-		super();
-	}
-
-	connectedCallback() {
-
-		const shadow = this.attachShadow({ mode: 'open' });
-
-		const image = document.createElement("img")
-		image.src = this.getAttribute("image")
-		image.onerror = function () {
-			this.onerror = null;
-			this.src = 'noImage.png';
-		}
-
-		const title = document.createElement("h2")
-		title.textContent = this.title
-
-		const link = document.createElement("a")
-		link.target = "_blank"
-		link.href = this.getAttribute("link")
-		link.appendChild(image)
-		link.appendChild(title)
-
-		const feed = document.createElement("button")
-		feed.textContent = this.getAttribute("feed")
-
-		const time = document.createElement("h3")
-		time.textContent = this.getAttribute("time_added")
-
-		const linkElem = document.createElement('link');
-		linkElem.setAttribute('rel', 'stylesheet');
-		linkElem.setAttribute('href', 'style.css');
-
-		this.shadowRoot.append(linkElem);
-		this.shadowRoot.append(link);
-		this.shadowRoot.append(feed);
-		this.shadowRoot.append(time);
-
-	}
-}
-
-customElements.define('rss-article', RssArticle, { extends: 'article' });
-
+//TODO add error handling
 async function get_feeds() {
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") + 1)
+
 	resp = await fetch("api/feeds")
 	feeds_array = await resp.json()
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") - 1)
+
 	return feeds_array
 }
 
 async function loadArticlesNow() {
-	observer.disconnect();
-	document.getElementsByTagName('main')[0].innerHTML = ''
+	additional_article_trigger.disconnect()
+	mainElement.innerHTML = ''
 	//alert(localStorage.getItem('rss.values.category') + " " + localStorage.getItem('rss.values.feed'))
-	result = await createArticles(localStorage.getItem('rss.values.read'), localStorage.getItem('rss.values.category'), localStorage.getItem('rss.values.feed'))
+	result = await createArticles(localStorage.getItem('rss.values.read'),
+		localStorage.getItem('rss.values.category'),
+		localStorage.getItem('rss.values.feed'))
 }
 
 async function createArticles(status, category, feed_id, id = 0) {
@@ -87,9 +50,10 @@ async function createArticles(status, category, feed_id, id = 0) {
 	}
 }
 
+//TODO add error handling
 async function getArticles(status, category, feed_id, id) {
-	let url = new URL('api/feeds/articles', window.location.href);
-	let params = new URLSearchParams(url.search);
+	let url = new URL('api/feeds/articles', window.location.href)
+	let params = new URLSearchParams(url.search)
 
 	if (id !== 0) { url.searchParams.append("before", id) }
 	if (status == 'read') { url.searchParams.append("read", true) }
@@ -97,9 +61,8 @@ async function getArticles(status, category, feed_id, id) {
 	if (category !== '') { url.searchParams.append("category", category) }
 	if (feed_id !== '') { url.searchParams.append("feed", feed_id) }
 
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") + 1)
 	response = await fetch(url)
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") - 1)
+
 	result = await response.json()
 	return result
 }
@@ -112,39 +75,70 @@ function getFeedName(id) {
 	)[0].title
 }
 
+//Is this a relic of old code?
 function htmlDecode(input) {
-	var doc = new DOMParser().parseFromString(input, "text/html");
-	return doc.documentElement.textContent;
+	var doc = new DOMParser().parseFromString(input, "text/html")
+	return doc.documentElement.textContent
 }
 
+//Modify to remove the custom article
 function createArticleCards(articles) {
 	articles.forEach(({ title, feed_id, link, image, added_epoch, read_epoch, id, feed_category }) => {
-		title = title.replace(/&apos;/g, '\'')
-		const article = document.createElement('article', { is: 'rss-article' })
-		//article.setAttribute("is","rss-article")
-		article.title = title
+		title = title.replace(/&apos/g, '\'') //fix poorly formatted quotes
+		const feed = getFeedName(feed_id)
+		const time_added = formatTimeSince(added_epoch)
+		const article = document.createElement('article')
+
+		const articleImage = document.createElement("img")
+		articleImage.src = image
+		articleImage.onerror = function () {
+			this.onerror = null
+			this.src = 'noImage.png'
+		}
+
+		const articleTitle = document.createElement("h2")
+		articleTitle.textContent = title
+
+		const articleLink = document.createElement("a")
+		articleLink.target = "_blank"
+		articleLink.href = link
+		articleLink.title = title
+		articleLink.appendChild(articleImage)
+		articleLink.appendChild(articleTitle)
+
+		const articleFeed = document.createElement("button")
+		articleFeed.textContent = feed
+
+		const articleTime = document.createElement("h3")
+		articleTime.textContent = time_added
+
 		article.setAttribute("article_id", id)
 		article.setAttribute("feed_id", feed_id)
 		article.setAttribute("category", feed_category)
-		article.setAttribute("image", image)
-		article.setAttribute("link", link)
-		article.setAttribute("time_added", formatTimeSince(added_epoch))
-		article.setAttribute("feed", getFeedName(feed_id))
+		//article.setAttribute("image", image)
+		//article.setAttribute("link", link)
+		//article.setAttribute("time_added", formatTimeSince(added_epoch))
+		//article.setAttribute("feed", getFeedName(feed_id))
 		article.setAttribute("read", Math.min(1, read_epoch))
-		document.getElementsByTagName('main')[0].appendChild(article)
-		document.getElementsByTagName('main')[0].lastId = id
+		article.append(articleLink)
+		article.append(articleFeed)
+		article.append(articleTime)
+		mainElement.appendChild(article)
+		mainElement.lastId = id
 	})
 	if (articles.length > 199) {
-		observer.observe(target)
+		additional_article_trigger.observe(articles_end)
 	}
 }
 
+//This should be streamlined
 function showNoArticles() {
 	let hr = document.createElement('hr')
 	hr.innerHTML = 'No Articles Returned'
-	document.getElementsByTagName('main')[0].appendChild(hr)
+	mainElement.appendChild(hr)
 }
 
+//Check logic, but probably ok
 function formatTimeSince(t) {
 	let seconds = (Date.now() / 1000 - t)
 	d = new Date(t * 1000)
@@ -159,45 +153,47 @@ function formatTimeSince(t) {
 	}
 }
 
+//add error handling
 async function articleUpdateRead(id, read) {
 	document.querySelector("article[article_id='" + id + "']").setAttribute('read', read)
-	let url = new URL('api/feeds/articles_update_read', window.location.href);
+	let url = new URL('api/feeds/articles_update_read', window.location.href)
 	url.searchParams.append("read", !!+read)
 	url.searchParams.append("id", parseInt(id))
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") + 1)
+
 	await fetch(url, { method: 'PUT' })
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") - 1)
 }
 
+//add error handling
 async function feedRead(feed_id) {
 	document.querySelectorAll("article[feed_id='" + feed_id + "']").forEach((article) => {
 		article.setAttribute("read", 1)
-	});
-	let url = new URL('api/feeds/articles_update_read', window.location.href);
+	})
+	let url = new URL('api/feeds/articles_update_read', window.location.href)
 	url.searchParams.append("read", true)
 	url.searchParams.append("feed_id", feed_id)
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") + 1)
+
 	await fetch(url, { method: 'PUT' })
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") - 1)
+
 }
 
+//add error handling
 async function categoryRead(category) {
 	document.querySelectorAll("article[category='" + category + "']").forEach((article) => {
 		article.setAttribute("read", 1)
-	});
-	let url = new URL('api/feeds/articles_update_read', window.location.href);
+	})
+	let url = new URL('api/feeds/articles_update_read', window.location.href)
 	url.searchParams.append("read", true)
 	url.searchParams.append("category", category)
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") + 1)
+
 	await fetch(url, { method: 'PUT' })
-	loading_bar.setAttribute("amount", loading_bar.getAttribute("amount") - 1)
+
 }
 
 //////////////////////////
 let adaptiveContextMenu = document.getElementById('adaptive-context-menu')
 
-function initiateMenuOption(event) {
-	let target = event.target.closest("div");
+function SelectMenuOption(event) {
+	let target = event.target.closest("div")
 	switch (target.id) {
 		case 'feed-read':
 			feedRead(target.getAttribute("feed_id"))
@@ -215,6 +211,7 @@ function initiateMenuOption(event) {
 			toggleRead()
 			break
 	}
+	hideCustomMenu()
 }
 
 function toggleRead() {
@@ -226,32 +223,32 @@ function toggleRead() {
 	loadArticlesNow()
 }
 
-let loginForm = document.getElementById("add_feed")
-
-loginForm.addEventListener("submit", addFeed)
-
 async function addFeed(event) {
-	event.preventDefault();
+	event.preventDefault()
 	console.log(event)
-	document.getElementById("formSubmit").disabled = true;
-	//curl -k -H 'Content-Type: application/json' -X POST http://192.168.0.197:8080/api/feeds -d '{"feeds": [{"title":"Weapons of Mass Destruction","category":"Books","link":"https://www.royalroad.com/fiction/syndication/64916","fallback_image":"","update_frequency":300}]}'
+	document.getElementById("formSubmit").disabled = true
 
-	document.getElementById("loadingSpinner").classList.add('visible');
+	document.getElementById("loadingSpinner").classList.add('visible')
 	resp = await fetch("api/feeds", {
 		method: 'POST',
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(
 			{
-				'title': loginForm.title.value,
-				'link': loginForm.link.value,
-				'category': loginForm.category.value,
-				'fallback_image': loginForm.image.value,
-				'update_frequency': loginForm.frequency.valueAsNumber
+				'title': addFeedMenu.title.value,
+				'link': addFeedMenu.link.value,
+				'category': addFeedMenu.category.value,
+				'fallback_image': addFeedMenu.image.value,
+				'update_frequency': addFeedMenu.frequency.valueAsNumber
 			})
 	})
 
+	document.getElementById("loadingSpinner").classList.remove('visible')
+	document.getElementById("formSubmit").disabled = false
+
 	switch (resp.status) {
 		case 201:
+			get_feeds()
+			removeFeedPopup()
 			break
 		case 409:
 			alert("Failed to add duplicate Title or Feed link")
@@ -260,140 +257,138 @@ async function addFeed(event) {
 			alert(resp.status)
 			break
 	}
+}
 
-	document.getElementById("loadingSpinner").classList.remove('visible');
-	document.getElementById("formSubmit").disabled = false;
-};
-
+//THIS NOW
 async function addFeedPopup() {
 	addCategoryList()
-	let addFeedMenu = document.getElementById("add-feed-menu")
+	blocker.classList.add('visible')
 	addFeedMenu.classList.add('visible')
 }
 
+//THIS NOW
 async function removeFeedPopup() {
-	let addFeedMenu = document.getElementById("add-feed-menu")
+	blocker.classList.remove('visible')
 	addFeedMenu.classList.remove('visible')
 }
 
+async function removeFeedPopup2(event) {
+	event.preventDefault()
+	removeFeedPopup()
+}
+
+//Errors?
 async function addCategoryList() {
 	let categories = await getCategories()
 	let feedList = document.getElementById("feed-categories")
 	feedList.innerHTML = ''
 	categories.forEach((category) => {
-		let newOption = document.createElement("option");
-		newOption.value = category;
-		feedList.appendChild(newOption);
+		let newOption = document.createElement("option")
+		newOption.value = category
+		feedList.appendChild(newOption)
 	})
 }
 
+//Errors?
 async function getCategories() {
 	response = await fetch('api/categories')
 	result = await response.json()
 	return result
 }
 
-function setColumns() {
+function calculateColumnCount() {
 	let columnWidth = Math.round(window.innerWidth / 300)
-	document.documentElement.style.setProperty('--columnAmount', columnWidth);
+	document.documentElement.style.setProperty('--columnAmount', columnWidth)
 }
 
+//Errors?
 async function undoRead(event) {
 	await fetch("api/feeds/articles_update_read", { method: 'PUT' })
 }
 
-function customMenu(e) {
-	removeFeedPopup()
+//TODO rewrite
+function showCustomMenu(e) {
 	e.preventDefault()
 	if (adaptiveContextMenu.classList.length == 0) {
 		if (e.target.closest('article') == null) {
-			adaptiveContextMenu.classList.add('background');
+			adaptiveContextMenu.classList.add('background')
 		} else {
-			adaptiveContextMenu.classList.add('article');
-			document.getElementById('feed-read').setAttribute("feed_id", e.target.closest('article').getAttribute("feed_id"));
-			document.getElementById('category-read').setAttribute("category", e.target.closest('article').getAttribute("category"));
+			adaptiveContextMenu.classList.add('article')
+			document.getElementById('feed-read').setAttribute("feed_id",
+				e.target.closest('article').getAttribute("feed_id"))
+			document.getElementById('category-read').setAttribute("category",
+				e.target.closest('article').getAttribute("category"))
 		}
 
 		(async () => {
 			// Re-positioning the Context Menu Element According to cursor position and left/right
 			if ((e.clientY + adaptiveContextMenu.clientHeight) < window.innerHeight) {
-				adaptiveContextMenu.style.top = e.clientY + `px`;
+				adaptiveContextMenu.style.top = e.clientY + `px`
 				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
 					if (el.classList.contains('up'))
-						el.classList.remove('up');
+						el.classList.remove('up')
 				})
 			} else {
-				adaptiveContextMenu.style.top = (e.clientY - adaptiveContextMenu.clientHeight) + `px`;
+				adaptiveContextMenu.style.top = (e.clientY - adaptiveContextMenu.clientHeight) + `px`
 				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
 					if (!el.classList.contains('up'))
-						el.classList.add('up');
+						el.classList.add('up')
 				})
 			}
 			if ((e.clientX + adaptiveContextMenu.clientWidth) < window.innerWidth) {
 				adaptiveContextMenu.style.left = e.clientX + `px`
 				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
 					if (el.classList.contains('left'))
-						el.classList.remove('left');
+						el.classList.remove('left')
 				})
 			} else {
-				adaptiveContextMenu.style.left = (e.clientX - adaptiveContextMenu.clientWidth) + `px`;
+				adaptiveContextMenu.style.left = (e.clientX - adaptiveContextMenu.clientWidth) + `px`
 				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
 					if (!el.classList.contains('left'))
-						el.classList.add('left');
+						el.classList.add('left')
 				})
 			}
 		})()
 	} else {
-		adaptiveContextMenu.className = ''
+		hideCustomMenu()
 	}
 }
 
-window.addEventListener('contextmenu', customMenu)
-
 /////////////////////////
 
-window.addEventListener('auxclick', e => {
-	if (adaptiveContextMenu.classList.length > 0 && e.button !== 2) {
-		e.preventDefault()
-		adaptiveContextMenu.className = ''
-	} else if (e.target.tagName == 'ARTICLE' && e.composedPath()[1].tagName == 'A' && e.button !== 2) {
-		articleUpdateRead(e.target.getAttribute('article_id'), 1)
-	}
-})
-
-adaptiveContextMenu.addEventListener('click', initiateMenuOption)
-
-window.addEventListener('click', articleClick)
-
+//TODO rewrite
 function articleClick(event) {
+	const article = event.target.closest('article')
 	if (adaptiveContextMenu.classList.length > 0) {
 		event.preventDefault()
-		adaptiveContextMenu.className = ''
+		hideCustomMenu()
 	}
-	else if (event.composedPath()[0].tagName == 'BUTTON' && event.target.tagName == 'ARTICLE') {
-		localStorage.setItem('rss.values.category', event.target.getAttribute("category"))
-		localStorage.setItem('rss.values.feed', event.target.getAttribute("feed_id"))
+	else if (article != null && event.target.tagName == 'BUTTON') {
+		localStorage.setItem('rss.values.category', article.getAttribute("category"))
+		localStorage.setItem('rss.values.feed', article.getAttribute("feed_id"))
 		loadArticlesNow()
-	} else if (event.target.tagName == 'ARTICLE') {
+	} else if (article != null) {
 		if (event.composedPath()[1].tagName == 'A') {
-			articleUpdateRead(event.target.getAttribute('article_id'), 1)
+			articleUpdateRead(article.getAttribute('article_id'), 1)
 		} else {
-			articleUpdateRead(event.target.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //This horrible little thing converts numeric to true and inverts it :P
+			articleUpdateRead(article.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //This horrible little thing converts numeric to true and inverts it :P
 		}
 	}
 }
 
+function tempClick(event) {
+	if (adaptiveContextMenu.classList.length > 0 && event.button !== 2) {
+		event.preventDefault()
+		hideCustomMenu()
+	} else if (event.target.closest('article') != null
+		&& event.composedPath()[1].tagName == 'A' && e.button !== 2) {
+		articleUpdateRead(event.target.closest('article').getAttribute('article_id'), 1)
+	}
+}
 
-/////////////////////////
-
-get_feeds().then(() => loadArticlesNow())
-setColumns()
-
-history.pushState(null, "");
-
-window.addEventListener("popstate", () => {
+function hijackBackButton() {
 	removeFeedPopup()
-	adaptiveContextMenu.className = ''
+	hideCustomMenu()
 	if (localStorage.getItem('rss.values.feed') != '') {
 		localStorage.setItem('rss.values.feed', '')
 	} else if (localStorage.getItem('rss.values.category') != '') {
@@ -401,8 +396,33 @@ window.addEventListener("popstate", () => {
 	}
 	loadArticlesNow()
 	history.pushState(null, "")
-})
+}
 
-addEventListener("resize", (event) => {
-	setColumns();
-});
+//Startup check logic
+
+get_feeds().then(() => loadArticlesNow())
+calculateColumnCount()
+
+history.pushState(null, "")
+
+addEventListener("popstate", hijackBackButton)
+
+addEventListener("resize", calculateColumnCount)
+
+//check
+mainElement.addEventListener('contextmenu', showCustomMenu)
+
+//TODO rewrite
+mainElement.addEventListener('click', articleClick)
+
+//TODO rewrite
+mainElement.addEventListener('auxclick', tempClick)
+
+//TODO rewrite
+adaptiveContextMenu.addEventListener('click', SelectMenuOption)
+
+addFeedMenu.addEventListener("submit", addFeed)
+
+blocker.addEventListener("click", removeFeedPopup)
+blocker.addEventListener("auxclick", removeFeedPopup)
+blocker.addEventListener("contextmenu", (e) => {e.preventDefault(); removeFeedPopup()})

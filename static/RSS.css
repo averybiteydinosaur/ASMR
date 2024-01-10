@@ -135,29 +135,37 @@ button:hover {
 	background-color: var(--white);
 }
 
-#add-feed-menu {
+#blocker {
 	display: none;
 	position: fixed;
 	z-index: 1;
-	background: rgb(0, 0, 0, 0.8);
+	background: rgb(0, 0, 0, 0.95);
 	width: 100vw;
 	height: 100vh;
-	justify-content: center;
-	align-items: center;
-	font-size: 1.5em;
 }
 
 #add_feed {
+	display: none;
+	font-size: 1.5em;
 	background-color: var(--black);
 	padding: 2em;
+	position: absolute;
+	z-index: 1;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 input {
 	width: 100%;
 }
 
-#add-feed-menu.visible {
-	display: flex;
+#add_feed.visible {
+	display: block;
+}
+
+#blocker.visible {
+	display: block;
 }
 
 #adaptive-context-menu.article>div {
@@ -225,6 +233,7 @@ input {
 #loadingSpinner {
 	display: none;
 	animation: spin 1s infinite;
+	vertical-align: middle;
 }
 
 #loadingSpinner.visible {
@@ -239,4 +248,65 @@ input {
 	100% {
 		transform: rotate(360deg);
 	}
+}
+
+article>a>img {
+	width: 100%;
+	aspect-ratio: 3/2;
+	object-fit: fill;
+	overflow: hidden;
+}
+
+article {
+	display: inline-grid;
+	grid-template: "link link link" auto ". . ." 1fr "feed . time" 1.6em / auto minmax(2em, 1fr) auto;
+}
+
+article>a {
+	color: inherit;
+	text-decoration: none;
+	grid-area: link;
+	overflow: hidden;
+}
+
+article>a:hover {
+	color: var(--white);
+}
+
+article>a>h2 {
+	padding-left: 0.2em;
+	font-size: 1em;
+	text-align: left;
+	margin: 0;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+article>button,
+article>h3 {
+	padding: 0.4em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.8em;
+}
+
+article>button {
+	grid-area: feed;
+	border: none;
+	color: inherit;
+	background-color: inherit;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+article>button:hover {
+	color: var(--white);
+}
+
+article>h3 {
+	grid-area: time;
+	margin: 0;
 }
