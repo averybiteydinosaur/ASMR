@@ -6,6 +6,12 @@ function hideCustomMenu() {
 	adaptiveContextMenu.className = ''
 }
 
+function allowMenuForInputs(event) {
+	if (event.target.tagName != 'INPUT') {
+		event.preventDefault()
+	}
+}
+
 function load_aditional_articles(e, observer) {
 	if (e[0].isIntersecting) {
 		createArticles(localStorage.getItem('rss.values.read'),
@@ -192,17 +198,16 @@ async function categoryRead(category) {
 //////////////////////////
 let adaptiveContextMenu = document.getElementById('adaptive-context-menu')
 
-function SelectMenuOption(event) {
-	let target = event.target.closest("div")
-	switch (target.id) {
+function SelectMenuOption(menuItem) {
+	switch (menuItem.id) {
 		case 'feed-read':
-			feedRead(target.getAttribute("feed_id"))
+			feedRead(menuItem.getAttribute("feed_id"))
 			break
 		case 'category-read':
-			categoryRead(target.getAttribute("category"))
+			categoryRead(menuItem.getAttribute("category"))
 			break
 		case 'add-feed':
-			addFeedPopup()
+			showFeedPopup()
 			break
 		case 'undo-read':
 			undoRead()
@@ -248,7 +253,7 @@ async function addFeed(event) {
 	switch (resp.status) {
 		case 201:
 			get_feeds()
-			removeFeedPopup()
+			hideFeedPopup()
 			break
 		case 409:
 			alert("Failed to add duplicate Title or Feed link")
@@ -259,22 +264,15 @@ async function addFeed(event) {
 	}
 }
 
-//THIS NOW
-async function addFeedPopup() {
+async function showFeedPopup() {
 	addCategoryList()
 	blocker.classList.add('visible')
 	addFeedMenu.classList.add('visible')
 }
 
-//THIS NOW
-async function removeFeedPopup() {
+async function hideFeedPopup() {
 	blocker.classList.remove('visible')
 	addFeedMenu.classList.remove('visible')
-}
-
-async function removeFeedPopup2(event) {
-	event.preventDefault()
-	removeFeedPopup()
 }
 
 //Errors?
@@ -308,86 +306,119 @@ async function undoRead(event) {
 
 //TODO rewrite
 function showCustomMenu(e) {
-	e.preventDefault()
-	if (adaptiveContextMenu.classList.length == 0) {
-		if (e.target.closest('article') == null) {
-			adaptiveContextMenu.classList.add('background')
-		} else {
-			adaptiveContextMenu.classList.add('article')
-			document.getElementById('feed-read').setAttribute("feed_id",
-				e.target.closest('article').getAttribute("feed_id"))
-			document.getElementById('category-read').setAttribute("category",
-				e.target.closest('article').getAttribute("category"))
-		}
-
-		(async () => {
-			// Re-positioning the Context Menu Element According to cursor position and left/right
-			if ((e.clientY + adaptiveContextMenu.clientHeight) < window.innerHeight) {
-				adaptiveContextMenu.style.top = e.clientY + `px`
-				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
-					if (el.classList.contains('up'))
-						el.classList.remove('up')
-				})
-			} else {
-				adaptiveContextMenu.style.top = (e.clientY - adaptiveContextMenu.clientHeight) + `px`
-				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
-					if (!el.classList.contains('up'))
-						el.classList.add('up')
-				})
-			}
-			if ((e.clientX + adaptiveContextMenu.clientWidth) < window.innerWidth) {
-				adaptiveContextMenu.style.left = e.clientX + `px`
-				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
-					if (el.classList.contains('left'))
-						el.classList.remove('left')
-				})
-			} else {
-				adaptiveContextMenu.style.left = (e.clientX - adaptiveContextMenu.clientWidth) + `px`
-				adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
-					if (!el.classList.contains('left'))
-						el.classList.add('left')
-				})
-			}
-		})()
+	if (e.target.closest('article') == null) {
+		adaptiveContextMenu.classList.add('background')
 	} else {
-		hideCustomMenu()
+		adaptiveContextMenu.classList.add('article')
+		document.getElementById('feed-read').setAttribute("feed_id",
+			e.target.closest('article').getAttribute("feed_id"))
+		document.getElementById('category-read').setAttribute("category",
+			e.target.closest('article').getAttribute("category"))
+	}
+
+	(async () => {
+		// Re-positioning the Context Menu Element According to cursor position and left/right
+		if ((e.clientY + adaptiveContextMenu.clientHeight) < window.innerHeight) {
+			adaptiveContextMenu.style.top = e.clientY + `px`
+			adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
+				if (el.classList.contains('up'))
+					el.classList.remove('up')
+			})
+		} else {
+			adaptiveContextMenu.style.top = (e.clientY - adaptiveContextMenu.clientHeight) + `px`
+			adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
+				if (!el.classList.contains('up'))
+					el.classList.add('up')
+			})
+		}
+		if ((e.clientX + adaptiveContextMenu.clientWidth) < window.innerWidth) {
+			adaptiveContextMenu.style.left = e.clientX + `px`
+			adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
+				if (el.classList.contains('left'))
+					el.classList.remove('left')
+			})
+		} else {
+			adaptiveContextMenu.style.left = (e.clientX - adaptiveContextMenu.clientWidth) + `px`
+			adaptiveContextMenu.querySelectorAll('.custom-contextmenu-sub').forEach(el => {
+				if (!el.classList.contains('left'))
+					el.classList.add('left')
+			})
+		}
+	})()
+}
+
+///
+//adaptiveContextMenu.addEventListener('click', SelectMenuOption)
+//blocker.addEventListener("click", removeFeedPopup)
+///
+//neither is open
+//  Mark as read
+//  Toggle read
+//	Change to 
+
+//TODO rewrite
+function standardClick(event) {
+	if (addFeedMenu.classList.contains('visible')) {
+		if (event.target.id == 'blocker' ||
+			event.target.id == 'close_add_feed') {
+			hideFeedPopup()
+		}
+	}
+	else if (adaptiveContextMenu.classList.contains('article') ||
+		adaptiveContextMenu.classList.contains('background')) {
+		let menuItem = event.target.closest("div[role=menu-item]")
+		if (menuItem != null) {
+			SelectMenuOption(menuItem)
+		} else {
+			hideCustomMenu()
+		}
+	}
+	else {
+		const article = event.target.closest('article')
+		if (article != null) {
+			articleClick(event, article)
+		}
 	}
 }
 
-/////////////////////////
-
-//TODO rewrite
-function articleClick(event) {
-	const article = event.target.closest('article')
-	if (adaptiveContextMenu.classList.length > 0) {
-		event.preventDefault()
-		hideCustomMenu()
-	}
-	else if (article != null && event.target.tagName == 'BUTTON') {
+function articleClick(event, article) {
+	if (event.target.tagName == 'BUTTON' && event.button == 0) {
 		localStorage.setItem('rss.values.category', article.getAttribute("category"))
 		localStorage.setItem('rss.values.feed', article.getAttribute("feed_id"))
 		loadArticlesNow()
-	} else if (article != null) {
-		if (event.composedPath()[1].tagName == 'A') {
-			articleUpdateRead(article.getAttribute('article_id'), 1)
-		} else {
-			articleUpdateRead(article.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //This horrible little thing converts numeric to true and inverts it :P
-		}
+	} else if (event.composedPath()[1].tagName == 'A') {
+		articleUpdateRead(article.getAttribute('article_id'), 1)
+	} else if (event.button == 0) {
+		articleUpdateRead(article.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //convert numeric to true and inverts it :P
 	}
 }
 
-function tempClick(event) {
-	if (adaptiveContextMenu.classList.length > 0 && event.button !== 2) {
-		event.preventDefault()
-		hideCustomMenu()
-	} else if (event.target.closest('article') != null
-		&& event.composedPath()[1].tagName == 'A' && e.button !== 2) {
-		articleUpdateRead(event.target.closest('article').getAttribute('article_id'), 1)
+function alternateClick(event) {
+	if (addFeedMenu.classList.contains('visible')) {
+		if (event.target.id == 'blocker') {
+			hideFeedPopup()
+		}
+	}
+	else if (adaptiveContextMenu.classList.contains('article') ||
+		adaptiveContextMenu.classList.contains('background')) {
+		let menuItem = event.target.closest("div[role=menu-item]")
+		if (menuItem != null) {
+			SelectMenuOption(menuItem)
+		} else {
+			hideCustomMenu()
+		}
+	} else {
+		const article = event.target.closest('article')
+		if (event.button == 2) {
+			showCustomMenu(event)
+		} else if (article != null) {
+			articleClick(event, article)
+		}
 	}
 }
 
 function hijackBackButton() {
-	removeFeedPopup()
+	hideFeedPopup()
 	hideCustomMenu()
 	if (localStorage.getItem('rss.values.feed') != '') {
 		localStorage.setItem('rss.values.feed', '')
@@ -405,24 +436,11 @@ calculateColumnCount()
 
 history.pushState(null, "")
 
-addEventListener("popstate", hijackBackButton)
-
-addEventListener("resize", calculateColumnCount)
-
-//check
-mainElement.addEventListener('contextmenu', showCustomMenu)
-
-//TODO rewrite
-mainElement.addEventListener('click', articleClick)
-
-//TODO rewrite
-mainElement.addEventListener('auxclick', tempClick)
-
-//TODO rewrite
-adaptiveContextMenu.addEventListener('click', SelectMenuOption)
-
 addFeedMenu.addEventListener("submit", addFeed)
 
-blocker.addEventListener("click", removeFeedPopup)
-blocker.addEventListener("auxclick", removeFeedPopup)
-blocker.addEventListener("contextmenu", (e) => {e.preventDefault(); removeFeedPopup()})
+addEventListener("popstate", hijackBackButton)
+addEventListener("resize", calculateColumnCount)
+addEventListener('click', standardClick)
+//to fix
+addEventListener('auxclick', alternateClick)
+addEventListener('contextmenu', allowMenuForInputs)

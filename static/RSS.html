@@ -12,6 +12,7 @@
 <body>
     <div id="blocker"></div>
     <form id="add_feed" autocomplete="off">
+        <img id="close_add_feed" class="img-cross">
         <label for="feedTitle">Feed Title</label><br>
         <input id="feedTitle" type="text" name="title" placeholder="Required" required><br>
         <label for="feedLink">Link</label><br>
@@ -38,19 +39,24 @@
         <datalist id="feed-categories"></datalist>
     </form>
     <div id="adaptive-context-menu" role="menu">
-        <div id="feed-read" role="menu-item"><img class="img-check-circle">
+        <div id="feed-read" role="menu-item">
+            <img class="img-check-circle">
             <p>Mark Feed Read</p>
         </div>
-        <div id="category-read" role="menu-item"><img class="img-check-square">
+        <div id="category-read" role="menu-item">
+            <img class="img-check-square">
             <p>Mark Category Read</p>
         </div>
-        <div id="add-feed" role="menu-item"><img class="img-edit">
+        <div id="add-feed" role="menu-item">
+            <img class="img-edit">
             <p>Add Feed</p>
         </div>
-        <div id="toggle-read" role="menu-item"><img class="img-repeat">
+        <div id="toggle-read" role="menu-item">
+            <img class="img-repeat">
             <p>Toggle Read/Unread</p>
         </div>
-        <div id="undo-read" role="menu-item"><img class="img-rotate-ccw">
+        <div id="undo-read" role="menu-item">
+            <img class="img-rotate-ccw">
             <p>Undo Last Read</p>
         </div>
     </div>
