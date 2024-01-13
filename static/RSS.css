@@ -9,7 +9,7 @@
 html {
 	scrollbar-width: none;
 	scroll-snap-type: y mandatory;
-	scroll-padding: 0.5em;
+	scroll-padding: 0.3em;
 	font-size: 16px;
 	font-family: Arial;
 }
@@ -18,6 +18,10 @@ body {
 	color: var(--grey);
 	background-color: var(--black);
 	margin: 0;
+}
+
+body.locked {
+	overflow: hidden;
 }
 
 main {
@@ -84,6 +88,7 @@ article[read="1"] {
 [role=menu-item] {
 	padding: 0.3em;
 	display: none;
+	font-size: clamp(0.8em, 4vw, 1em);
 }
 
 [role=menu-item]>img {
@@ -113,23 +118,23 @@ article[read="1"] {
 	mask-image: url(rotate-ccw.svg);
 }
 
-.img-cross {
-	mask-image: url(x.svg);
-	background-color: var(--grey);
-	width: 1em;
-	height: 1em;
-	position: absolute;
-	top: 0.5em;
-	right: 0.5em;
-}
-
-.img-cross:hover {
-	background-color: var(--white);
-	cursor: pointer;
-}
-
-form>.img-cross:hover ~ #blocker {
+form>.img-cross:hover~#blocker {
 	background: rgb(0, 0, 0, 0.8);
+}
+
+#formSubmit {
+	background: var(--dark-grey);
+	border: 1px solid;
+	border-color: var(--white);
+	font-size: 1em;
+	color: var(--grey);
+	border-radius: 0.3em;
+	opacity: 0.8;
+}
+
+#formSubmit:hover {
+	color: var(--white);
+	background-color: var(--grey);
 }
 
 [role=menu-item] p {
@@ -165,18 +170,47 @@ button:hover {
 
 #add_feed {
 	display: none;
-	font-size: 1.5em;
+	font-size: clamp(1em, 8vw, 1.5em);
 	background-color: var(--black);
-	padding: 2em;
-	position: absolute;
+	padding: 1em 2em;
+	margin: auto;
 	z-index: 1;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+}
+
+#add_feed>div {
+	border: 1px solid;
+	padding: 0.5em;
+	margin: 0 0 0.5em 0;
+	border-radius: 0.3em;
+}
+
+label {
+	font-weight: bold;
+	padding: 0.5em 0;
+	color: var(--white);
 }
 
 input {
 	width: 100%;
+	box-sizing: border-box;
+	background: none;
+	color: var(--white);
+	border: none;
+	margin: 0.5em 0 0 0;
+	border-bottom: thin solid;
+	font-size: 0.7em;
+	padding: 0.1em 0;
+	border-color: var(--grey);
+}
+
+::placeholder {
+	color: var(--white);
+}
+
+input:focus {
+	outline: none;
+	margin: 0.4 0 0 0;
+	border-color: var(--white);
 }
 
 #add_feed.visible {
@@ -184,7 +218,7 @@ input {
 }
 
 #blocker.visible {
-	display: block;
+	display: flex;
 }
 
 #adaptive-context-menu.article>div {

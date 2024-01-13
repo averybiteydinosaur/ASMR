@@ -3,12 +3,14 @@ const addFeedMenu = document.getElementById("add_feed")
 const blocker = document.getElementById("blocker")
 
 function hideCustomMenu() {
+	hideBlocker()
 	adaptiveContextMenu.className = ''
 }
 
-function allowMenuForInputs(event) {
+function customMenu(event) {
 	if (event.target.tagName != 'INPUT') {
 		event.preventDefault()
+		alternateClick(event)
 	}
 }
 
@@ -199,6 +201,7 @@ async function categoryRead(category) {
 let adaptiveContextMenu = document.getElementById('adaptive-context-menu')
 
 function SelectMenuOption(menuItem) {
+	hideCustomMenu()
 	switch (menuItem.id) {
 		case 'feed-read':
 			feedRead(menuItem.getAttribute("feed_id"))
@@ -216,7 +219,6 @@ function SelectMenuOption(menuItem) {
 			toggleRead()
 			break
 	}
-	hideCustomMenu()
 }
 
 function toggleRead() {
@@ -266,13 +268,23 @@ async function addFeed(event) {
 
 async function showFeedPopup() {
 	addCategoryList()
-	blocker.classList.add('visible')
+	showBlocker()
 	addFeedMenu.classList.add('visible')
 }
 
+function showBlocker() {
+	blocker.classList.add('visible')
+	document.body.classList.add('locked')
+}
+
 async function hideFeedPopup() {
-	blocker.classList.remove('visible')
+	hideBlocker()
 	addFeedMenu.classList.remove('visible')
+}
+
+function hideBlocker() {
+	blocker.classList.remove('visible')
+	document.body.classList.remove('locked')
 }
 
 //Errors?
@@ -306,6 +318,7 @@ async function undoRead(event) {
 
 //TODO rewrite
 function showCustomMenu(e) {
+	showBlocker()
 	if (e.target.closest('article') == null) {
 		adaptiveContextMenu.classList.add('background')
 	} else {
@@ -347,16 +360,6 @@ function showCustomMenu(e) {
 	})()
 }
 
-///
-//adaptiveContextMenu.addEventListener('click', SelectMenuOption)
-//blocker.addEventListener("click", removeFeedPopup)
-///
-//neither is open
-//  Mark as read
-//  Toggle read
-//	Change to 
-
-//TODO rewrite
 function standardClick(event) {
 	if (addFeedMenu.classList.contains('visible')) {
 		if (event.target.id == 'blocker' ||
@@ -370,6 +373,7 @@ function standardClick(event) {
 		if (menuItem != null) {
 			SelectMenuOption(menuItem)
 		} else {
+			event.preventDefault()
 			hideCustomMenu()
 		}
 	}
@@ -396,6 +400,7 @@ function articleClick(event, article) {
 function alternateClick(event) {
 	if (addFeedMenu.classList.contains('visible')) {
 		if (event.target.id == 'blocker') {
+			event.preventDefault()
 			hideFeedPopup()
 		}
 	}
@@ -405,6 +410,7 @@ function alternateClick(event) {
 		if (menuItem != null) {
 			SelectMenuOption(menuItem)
 		} else {
+			event.preventDefault()
 			hideCustomMenu()
 		}
 	} else {
@@ -441,6 +447,5 @@ addFeedMenu.addEventListener("submit", addFeed)
 addEventListener("popstate", hijackBackButton)
 addEventListener("resize", calculateColumnCount)
 addEventListener('click', standardClick)
-//to fix
-addEventListener('auxclick', alternateClick)
-addEventListener('contextmenu', allowMenuForInputs)
+addEventListener('auxclick', (e) => {if (e.button == 1) {alternateClick(e)}})
+addEventListener('contextmenu', customMenu)
