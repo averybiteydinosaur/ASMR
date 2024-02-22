@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS feeds
   (
      id                       SERIAL PRIMARY KEY,
      title                    TEXT,
-     category_id              TEXT,
+     category                 TEXT,
      link                     TEXT,
      valid                    BOOL,
      last_updated_epoch       INTEGER,

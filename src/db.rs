@@ -199,7 +199,6 @@ pub async fn backup_image(pool: &Pool, feed_id: i32) -> String {
 }
 
 pub async fn add_feed(pool: &Pool, feed: api::IncomingFeed) -> Result<u64, Box<dyn error::Error>> {
-
     Ok(pool
         .clone()
         .get()
@@ -330,7 +329,7 @@ pub async fn update_articles_read(pool: &Pool, update_details: api::UpdateReadDe
                 };
             }
             _ => {
-                let epoch = 0;
+                let epoch = 0 as i32;
                 match update_details.id {
                     Some(id) => {
                         let query = "UPDATE articles SET read_epoch= $1 WHERE id = $2".to_string();

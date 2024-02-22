@@ -62,7 +62,7 @@ fn feed_should_run(feed_db_entry: &db::FeedEntry) -> bool {
 pub fn seconds_since_epoch() -> i32 {
     time::UNIX_EPOCH
         .elapsed()
-        .expect("failed to calucalte seconds since epoch")
+        .expect("failed to calculate seconds since epoch")
         .as_secs() as i32
 }
 

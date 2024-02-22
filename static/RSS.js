@@ -1,6 +1,7 @@
 const mainElement = document.getElementsByTagName('main')[0]
 const addFeedMenu = document.getElementById("add_feed")
 const blocker = document.getElementById("blocker")
+const path = document.getElementById("path")
 
 function hideCustomMenu() {
 	hideBlocker()
@@ -19,6 +20,27 @@ function load_aditional_articles(e, observer) {
 		createArticles(localStorage.getItem('rss.values.read'),
 			localStorage.getItem('rss.values.category'),
 			localStorage.getItem('rss.values.feed'), mainElement.lastId)
+	}
+}
+
+function setPath() {
+	path.classList.remove("unread")
+	const category = localStorage.getItem('rss.values.category')
+	const feedId = localStorage.getItem('rss.values.feed')
+
+	if (localStorage.getItem('rss.values.read') == "unread") {
+		path.classList.add("unread")
+	}
+
+	if(feedId) {
+		path.innerHTML = " / " + category + " / " + getFeedName(feedId)
+	} else if (category) {
+		path.innerHTML = category			
+	} else {
+		const homeImage = document.createElement("img")
+		homeImage.classList.add("img-home")
+		path.innerHTML = ""
+		path.appendChild(homeImage)
 	}
 }
 
@@ -43,10 +65,10 @@ async function get_feeds() {
 async function loadArticlesNow() {
 	additional_article_trigger.disconnect()
 	mainElement.innerHTML = ''
-	//alert(localStorage.getItem('rss.values.category') + " " + localStorage.getItem('rss.values.feed'))
 	result = await createArticles(localStorage.getItem('rss.values.read'),
 		localStorage.getItem('rss.values.category'),
 		localStorage.getItem('rss.values.feed'))
+	setPath()
 }
 
 async function createArticles(status, category, feed_id, id = 0) {
@@ -142,7 +164,7 @@ function createArticleCards(articles) {
 //This should be streamlined
 function showNoArticles() {
 	let hr = document.createElement('hr')
-	hr.innerHTML = 'No Articles Returned'
+	hr.innerHTML = 'No Articles Returned - try the context menu'
 	mainElement.appendChild(hr)
 }
 
@@ -393,7 +415,7 @@ function articleClick(event, article) {
 	} else if (event.composedPath()[1].tagName == 'A') {
 		articleUpdateRead(article.getAttribute('article_id'), 1)
 	} else if (event.button == 0) {
-		articleUpdateRead(article.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //convert numeric to true and inverts it :P
+		articleUpdateRead(article.getAttribute('article_id'), 1 - event.target.getAttribute('read')) //convert numeric to true and inverts it
 	}
 }
 
@@ -415,7 +437,7 @@ function alternateClick(event) {
 		}
 	} else {
 		const article = event.target.closest('article')
-		if (event.button == 2) {
+		if (event.button == 2 || event.button == -1) { //why chrome?!
 			showCustomMenu(event)
 		} else if (article != null) {
 			articleClick(event, article)
@@ -449,3 +471,4 @@ addEventListener("resize", calculateColumnCount)
 addEventListener('click', standardClick)
 addEventListener('auxclick', (e) => {if (e.button == 1) {alternateClick(e)}})
 addEventListener('contextmenu', customMenu)
+//fuck google

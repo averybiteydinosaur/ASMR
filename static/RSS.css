@@ -12,6 +12,7 @@ html {
 	scroll-padding: 0.3em;
 	font-size: 16px;
 	font-family: Arial;
+	user-select: none;
 }
 
 body {
@@ -118,23 +119,37 @@ article[read="1"] {
 	mask-image: url(rotate-ccw.svg);
 }
 
+.img-home {
+	mask-image: url(home.svg);
+	mask-repeat: no-repeat;
+	mask-position: center;
+	width: 1.2em;
+	height: 1.2em;
+	background-color: black;
+}
+
+#path.unread>.img-home {
+	background-color: white;
+}
+
 form>.img-cross:hover~#blocker {
 	background: rgb(0, 0, 0, 0.8);
 }
 
 #formSubmit {
-	background: var(--dark-grey);
+	background: var(--black);
 	border: 1px solid;
 	border-color: var(--white);
 	font-size: 1em;
 	color: var(--grey);
 	border-radius: 0.3em;
 	opacity: 0.8;
+	color: var(--white);
+	cursor: pointer;
 }
 
 #formSubmit:hover {
-	color: var(--white);
-	background-color: var(--grey);
+	opacity: 1;
 }
 
 [role=menu-item] p {
@@ -159,6 +174,23 @@ button:hover {
 	background-color: var(--white);
 }
 
+#path {
+	background: gold;
+	position: fixed;
+	right: 2em;
+	bottom: 2em;
+	padding: 0.8em;
+	border-radius: 2em;
+	font-weight: bold;
+	color: black;
+	font-size: 1.2em;
+}
+
+#path.unread {
+	background: green;
+	color: white
+}
+
 #blocker {
 	display: none;
 	position: fixed;
@@ -175,6 +207,8 @@ button:hover {
 	padding: 1em 2em;
 	margin: auto;
 	z-index: 1;
+	border: 1px solid;
+	border-radius: 0.3em;
 }
 
 #add_feed>div {
@@ -288,11 +322,13 @@ article>a>img {
 	aspect-ratio: 3/2;
 	object-fit: fill;
 	overflow: hidden;
+	border-radius: 0.5em 0.5em 0 0;
 }
 
 article {
 	display: inline-grid;
 	grid-template: "link link link" auto ". . ." 1fr "feed . time" 1.6em / auto minmax(2em, 1fr) auto;
+	border-radius: 0.5em;
 }
 
 article>a {
@@ -333,6 +369,7 @@ article>button {
 	background-color: inherit;
 	font-weight: bold;
 	cursor: pointer;
+	border-radius: 0.5em;
 }
 
 article>button:hover {
