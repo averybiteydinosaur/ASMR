@@ -66,11 +66,8 @@ pub fn seconds_since_epoch() -> i32 {
         .as_secs() as i32
 }
 
-pub fn clean_url_uid(url: String) -> String {
-    url.split("?")
-        .next()
-        .expect("Failed on splitting ?")
-        .split("#")
+pub fn clean_uid(url: String) -> String {
+    url.split("#")
         .next()
         .expect("Failed on splitting #")
         .to_string()
@@ -78,13 +75,13 @@ pub fn clean_url_uid(url: String) -> String {
 
 async fn create_article(pool: &Pool, feed_item: feed_rs::model::Entry, feed_id: i32) -> NewArticle {
     NewArticle {
-        uid: clean_url_uid(feed_item.id),
+        uid: clean_uid(feed_item.id),
         title: match feed_item.title {
             Some(v) => v.content,
             None => "No title found in RSS feed!".to_string(),
         },
         link: match feed_item.links.get(0) {
-            Some(v) => clean_url_uid(v.href.clone()),
+            Some(v) => v.href.clone(),
             None => "https://www.google.com/search?q=do+a+barrel+roll".to_string(),
         },
         image: get_image(pool, feed_item.media, feed_id).await,
