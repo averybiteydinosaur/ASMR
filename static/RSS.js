@@ -436,12 +436,7 @@ function alternateClick(event) {
 			hideCustomMenu()
 		}
 	} else {
-		const article = event.target.closest('article')
-		if (event.button == 2 || event.button == -1) { //why chrome?!
-			showCustomMenu(event)
-		} else if (article != null) {
-			articleClick(event, article)
-		}
+		showCustomMenu(event)
 	}
 }
 

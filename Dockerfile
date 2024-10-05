@@ -3,7 +3,7 @@ FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 
 RUN cargo new rss
 WORKDIR rss
-COPY Cargo.toml Cargo.lock .
+COPY Cargo.toml Cargo.lock ./
 RUN cargo build --locked --release
 
 COPY src src
