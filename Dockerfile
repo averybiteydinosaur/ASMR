@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.76.0
+ARG RUST_VERSION=1.81.0
 FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 
 RUN cargo new rss

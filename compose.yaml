@@ -40,7 +40,6 @@ services:
 volumes:
   postgres-data:
 
-
 secrets:
   db-password:
     file: db/password.txt

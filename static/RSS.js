@@ -463,7 +463,7 @@ addFeedMenu.addEventListener("submit", addFeed);
 
 function getClickTarget(event) {
   if (event.target.tagName == "INPUT") {
-    return [null, null];
+    return ["input", null];
   }
   if (event.target.id == "blocker") {
     return ["blocker", null];
@@ -483,67 +483,27 @@ function getClickTarget(event) {
   if (menuItem != null) {
     return ["menu-item", menuItem];
   }
-  return ["background", null];
+  if (event.target.tagName == "MAIN") {
+    return "background"
+  }
+  return [null, null];
 }
 
 function clickBlocker(event) {
-  event.preventDefault();
   hideBlocker();
   hideFeedPopup();
   hideCustomMenu();
 }
 
 function clickFeedLink(event, target) {
-  if (event.type == "click") {
-    localStorage.setItem(
-      "rss.values.category",
-      target.getAttribute("category")
-    );
-    localStorage.setItem("rss.values.feed", target.getAttribute("feed_id"));
-    loadArticlesNow();
-  } else if (event.type == "contextmenu") {
-    event.preventDefault();
-    showCustomMenu(event);
-  }
-}
-
-function clickLink(event, target) {
-  if (event.type == "contextmenu") {
-    event.preventDefault();
-    showCustomMenu(event);
-  } else {
-    articleUpdateRead(target.getAttribute("article_id"), 1);
-  }
-}
-
-function clickArticle(event, target) {
-  if (event.type == "contextmenu") {
-    event.preventDefault();
-    showCustomMenu(event);
-  } else if (event.type == "click") {
-    articleUpdateRead(
-      target.getAttribute("article_id"),
-      1 - target.getAttribute("read")
-    );
-  }
+  localStorage.setItem("rss.values.category", target.getAttribute("category"));
+  localStorage.setItem("rss.values.feed", target.getAttribute("feed_id"));
+  loadArticlesNow();
 }
 
 function clickMenuItem(event, target) {
   event.preventDefault();
   SelectMenuOption(target);
-}
-
-function clickBackground(event) {
-  if (event.type == "contextmenu") {
-    event.preventDefault();
-    showCustomMenu(event);
-  }
-}
-
-function clickIfMiddle(event) {
-  if (event.button == 1) {
-    customClick(event);
-  }
 }
 
 function customClick(event) {
@@ -556,21 +516,60 @@ function customClick(event) {
       clickFeedLink(event, target);
       break;
     case "link":
-      clickLink(event, target);
+      articleUpdateRead(target.getAttribute("article_id"), 1);
       break;
     case "article":
-      clickArticle(event, target);
+      articleUpdateRead(
+        target.getAttribute("article_id"),
+        1 - target.getAttribute("read")
+      );
       break;
     case "menu-item":
       clickMenuItem(event, target);
       break;
-    case "background":
-      clickBackground(event);
+  }
+}
+
+function customRightClick(event) {
+  console.log("rightclick");
+  var [type, target] = getClickTarget(event);
+  if (type != "input") {
+    event.preventDefault();
+  }
+  switch (type) {
+    case "blocker":
+      clickBlocker(event);
+      break;
+    case "menu-item":
+      clickMenuItem(event, target);
+      break;
+    case "input":
+    case null:
+      break
+    default:
+      showCustomMenu(event);
+  }
+}
+
+function customMiddleClick(event) {
+  if (event.button == 1) {
+    var [type, target] = getClickTarget(event);
+    switch (type) {
+      case "blocker":
+        clickBlocker(event);
+        break;
+      case "link":
+        articleUpdateRead(target.getAttribute("article_id"), 1);
+        break;
+      case "menu-item":
+        clickMenuItem(event, target);
+        break;
+    }
   }
 }
 
 addEventListener("popstate", hijackBackButton);
 addEventListener("resize", calculateColumnCount);
 addEventListener("click", customClick);
-addEventListener("auxclick", clickIfMiddle);
-addEventListener("contextmenu", customClick);
+addEventListener("auxclick", customMiddleClick);
+addEventListener("contextmenu", customRightClick);
