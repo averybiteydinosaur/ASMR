@@ -27,6 +27,7 @@ body.locked {
 
 main {
 	text-align: center;
+	min-height: 100vh;
 }
 
 *+h2 {
@@ -36,6 +37,7 @@ main {
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 3;
+	line-clamp: 3;
 }
 
 *+h3 {
@@ -46,6 +48,7 @@ main {
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 1;
+	line-clamp: 1;
 }
 
 .article_feed {
@@ -351,6 +354,7 @@ article>a>h2 {
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 article>button,
