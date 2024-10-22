@@ -281,6 +281,7 @@ function toggleRead() {
 }
 
 async function addFeed(event) {
+  event.preventDefault()
   console.log(event);
   document.getElementById("formSubmit").disabled = true;
 
