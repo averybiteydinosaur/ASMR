@@ -125,6 +125,20 @@ async fn add_new_entries(
     .await
 }
 
+async fn fail_add_new_entries(pool: &Pool, feed_db_entry: db::FeedEntry) {
+    let previous_uids: Vec<String> = serde_json::from_str(&feed_db_entry.latest_uids)
+        .expect("failed to parse previous UIDs as JSON"); //Array was stored as DB string
+
+    db::update_feeds(
+        pool,
+        feed_db_entry.id,
+        seconds_since_epoch(), //last_updated_epoch
+        feed_db_entry.last_added_epoch,
+        previous_uids,
+    )
+    .await
+}
+
 pub async fn update_feeds(pool: &Pool, feed_db_entries: Vec<db::FeedEntry>) {
     let mut workers = FuturesUnordered::new();
 
@@ -156,6 +170,7 @@ pub async fn update_feed(
         Ok(resp) => resp,
         Err(e) => {
             eprintln!("{}", feed_db_entry.link);
+            fail_add_new_entries(pool, feed_db_entry).await;
             return Err(e);
         }
     };
